@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Face Motion Studio</title>
+<style>
+:root{--bg:#080b14;--panel:#111827;--line:#293449;--text:#edf2ff;--muted:#9aa8c2;--accent:#7c5cff;--cyan:#32d7e8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182044 0,#080b14 55%);color:var(--text);font:15px/1.5 Inter,system-ui,Segoe UI,sans-serif;min-height:100vh}
+header{padding:24px clamp(16px,4vw,48px);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ffffff12;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:1.25rem;letter-spacing:.3px}.brand span{color:var(--cyan)}.pill{font-size:.78rem;border:1px solid #32d7e855;color:#7eeaf3;border-radius:99px;padding:6px 10px}
+main{max-width:1250px;margin:auto;padding:28px clamp(14px,3vw,32px) 48px}.intro{margin-bottom:24px}.intro h1{font-size:clamp(2rem,4vw,3.2rem);line-height:1.08;margin:0 0 12px;letter-spacing:-1.5px}.intro h1 em{font-style:normal;color:var(--cyan)}.intro p{color:var(--muted);max-width:720px;margin:0}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:20px}.panel{background:#101726dd;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #0003}.panel-head{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-head h2{font-size:1rem;margin:0}.small{font-size:.8rem;color:var(--muted)}
+.stage{position:relative;background:#05070c;aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden}.stage video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none}.stage canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.placeholder{text-align:center;color:var(--muted);padding:28px}.camera-icon{font-size:3rem;margin-bottom:8px}.status{position:absolute;top:14px;left:14px;background:#07111bd9;border:1px solid #ffffff25;border-radius:99px;padding:6px 10px;font-size:.75rem}.status:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffb84d;margin-right:7px}.status.live:before{background:#4ee5a4}.stage-actions{display:flex;flex-wrap:wrap;gap:10px;padding:16px}
+button,.upload-label{font:inherit;font-weight:650;border:1px solid var(--line);background:#1a2437;color:var(--text);padding:10px 14px;border-radius:11px;cursor:pointer;transition:.15s}button:hover,.upload-label:hover{transform:translateY(-1px);border-color:#6576a1}button.primary{background:linear-gradient(120deg,#7157ff,#4e73ff);border:0}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.right-stack{display:grid;gap:20px;align-content:start}.content{padding:18px 20px}.section-title{font-size:.88rem;margin:0 0 12px}.filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.filter-btn{text-align:left;display:flex;align-items:center;gap:9px;padding:10px;font-size:.88rem}.filter-btn.active{border-color:var(--cyan);background:#14313b}.filter-btn .emoji{font-size:1.25rem}.upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.upload-label{display:inline-block}.upload-label input{display:none}.preview{width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:none}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{padding:12px;background:#0b1220;border:1px solid #202c40;border-radius:12px}.metric strong{display:block;font-size:1.3rem}.metric span{color:var(--muted);font-size:.78rem}.notice{font-size:.82rem;color:var(--muted);background:#0c1422;border:1px solid #253249;border-radius:12px;padding:12px;margin-top:14px}.notice b{color:#dce7ff}.footer-note{color:var(--muted);font-size:.8rem;text-align:center;margin-top:22px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#18243a;border:1px solid #40506d;border-radius:12px;padding:12px 16px;display:none;max-width:90vw;z-index:5}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.right-stack{grid-template-columns:1fr 1fr}.right-stack .panel:last-child{grid-column:1/-1}}@media(max-width:560px){.right-stack{grid-template-columns:1fr}.right-stack .panel:last-child{grid-column:auto}.intro h1{letter-spacing:-.8px}.stage-actions button{flex:1}}
+</style>
+</head>
+<body>
+<header><div class="brand">◈ FACE<span> MOTION</span> STUDIO</div><div class="pill">LIVE CAMERA LAB</div></header>
+<main>
+<section class="intro"><h1>Your face. Your motion.<br><em>Your effects.</em></h1><p>Experiment with live face tracking and playful camera filters. Your camera stays in this browser session; start it when you're ready.</p></section>
+<div class="grid">
+<section class="panel">
+ <div class="panel-head"><h2>Live camera</h2><span class="small" id="cameraLabel">Camera off</span></div>
+ <div class="stage" id="stage">
+  <div class="placeholder" id="placeholder"><div class="camera-icon">◎</div><b>Your camera preview appears here</b><div class="small">Allow camera access when your browser asks.</div></div>
+  <video id="video" autoplay playsinline muted></video><canvas id="overlay"></canvas>
+  <div class="status" id="status">Camera offline</div>
+ </div>
+ <div class="stage-actions"><button class="primary" id="startBtn">Start camera</button><button id="stopBtn" disabled>Stop camera</button><button id="snapBtn" disabled>Take snapshot</button></div>
+</section>
+<div class="right-stack">
+<section class="panel">
+ <div class="panel-head"><h2>Live filters</h2><span class="small">Preview effects</span></div>
+ <div class="content"><div class="filter-grid">
+ <button class="filter-btn active" data-filter="none"><span class="emoji">◌</span> No filter</button>
+ <button class="filter-btn" data-filter="glasses"><span class="emoji">🕶️</span> Neon glasses</button>
+ <button class="filter-btn" data-filter="mask"><span class="emoji">🎭</span> Face frame</button>
+ <button class="filter-btn" data-filter="sparkle"><span class="emoji">✦</span> Sparkles</button>
+ <button class="filter-btn" data-filter="mono"><span class="emoji">◐</span> Monochrome</button>
+ <button class="filter-btn" data-filter="glow"><span class="emoji">✨</span> Glow</button>
+ </div><div class="notice">Filters are visual overlays and color effects. Face tracking is simulated until you connect a supported landmark-detection model.</div></div>
+</section>
+<section class="panel">
+ <div class="panel-head"><h2>Face reference</h2><span class="small">Optional upload</span></div>
+ <div class="content"><div class="upload-row"><label class="upload-label">Choose image <input type="file" id="faceUpload" accept="image/*"></label><img class="preview" id="facePreview" alt="Selected face reference"><button id="clearUpload" disabled>Clear</button></div>
+ <div class="notice"><b>Face swap:</b> this demo can load a reference image, but it does not replace your live face. Realistic real-time swapping needs an AI face-swap model and should only be used with permission.</div></div>
+</section>
+<section class="panel">
+ <div class="panel-head"><h2>Motion status</h2><span class="small">Session metrics</span></div>
+ <div class="content"><div class="metrics"><div class="metric"><strong id="fps">—</strong><span>Preview FPS</span></div><div class="metric"><strong id="tracking">Off</strong><span>Face tracking</span></div><div class="metric"><strong id="filterMetric">None</strong><span>Active effect</span></div><div class="metric"><strong id="session">00:00</strong><span>Session time</span></div></div></div>
+</section>
+</div>
+</div>
+<p class="footer-note">Tip: use HTTPS or localhost for camera access. This demo is a front-end prototype, not a biometric identity or face-swap system.</p>
+</main><div class="toast" id="toast" role="status"></div>
+<script>
+const video=document.getElementById('video'), canvas=document.getElementById('overlay'), ctx=canvas.getContext('2d');
+const startBtn=document.getElementById('startBtn'), stopBtn=document.getElementById('stopBtn'), snapBtn=document.getElementById('snapBtn');
+const placeholder=document.getElementById('placeholder'), statusEl=document.getElementById('status');
+let stream=null, activeFilter='none', raf=0, startTime=0, timer=null, lastFrame=0, fpsSmooth=0, referenceUrl=null;
+const filterNames={none:'None',glasses:'Neon glasses',mask:'Face frame',sparkle:'Sparkles',mono:'Monochrome',glow:'Glow'};
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3000)}
+function resizeCanvas(){const r=canvas.getBoundingClientRect();const dpr=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0)}
+window.addEventListener('resize',resizeCanvas);
+document.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;document.getElementById('filterMetric').textContent=filterNames[activeFilter];if(activeFilter==='mono')video.style.filter='grayscale(1)';else if(activeFilter==='glow')video.style.filter='saturate(1.35) brightness(1.12)';else video.style.filter='none';if(activeFilter==='glow')video.style.filter='saturate(1.35) brightness(1.12)';}));
+async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false});video.srcObject=stream;video.style.display='block';placeholder.style.display='none';await video.play();resizeCanvas();startBtn.disabled=true;stopBtn.disabled=false;snapBtn.disabled=false;document.getElementById('cameraLabel').textContent='Camera on';statusEl.textContent='Camera active';statusEl.classList.add('live');document.getElementById('tracking').textContent='Demo';startTime=Date.now();timer=setInterval(()=>{const s=Math.floor((Date.now()-startTime)/1000);document.getElementById('session').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},500);lastFrame=performance.now();drawLoop();toast('Camera started. Choose a filter to try it.')}catch(e){let msg='Could not start camera.';if(e.name==='NotAllowedError')msg='Camera permission was denied. Allow camera access in your browser settings.';else if(e.name==='NotFoundError')msg='No camera was found on this device.';else if(!navigator.mediaDevices)msg='Camera access requires HTTPS or localhost in a modern browser.';toast(msg);statusEl.textContent='Camera unavailable';}}
+function stopCamera(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;video.style.display='none';video.style.filter='none';placeholder.style.display='block';ctx.clearRect(0,0,canvas.width,canvas.height);cancelAnimationFrame(raf);clearInterval(timer);startBtn.disabled=false;stopBtn.disabled=true;snapBtn.disabled=true;document.getElementById('cameraLabel').textContent='Camera off';statusEl.textContent='Camera offline';statusEl.classList.remove('live');document.getElementById('tracking').textContent='Off';document.getElementById('fps').textContent='—';document.getElementById('session').textContent='00:00'}
+function drawLoop(now){raf=requestAnimationFrame(drawLoop);if(!stream||video.readyState<2)return;const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);if(lastFrame){const fps=1000/(now-lastFrame);fpsSmooth=fpsSmooth?fpsSmooth*.8+fps*.2:fps;document.getElementById('fps').textContent=Math.round(fpsSmooth)}lastFrame=now;
+ // Demo effects are positioned relative to the preview. Landmark-accurate effects need a face landmark model.
+ if(activeFilter==='glasses'){ctx.save();ctx.translate(w,0);ctx.scale(-1,1);ctx.strokeStyle='#42f5ee';ctx.shadowColor='#42f5ee';ctx.shadowBlur=12;ctx.lineWidth=3;const cx=w*.5,cy=h*.38,gw=w*.12,gh=h*.055;ctx.beginPath();ctx.roundRect(cx-gw*1.1,cy-gh/2,gw,gh,10);ctx.roundRect(cx+gw*.1,cy-gh/2,gw,gh,10);ctx.moveTo(cx-gw*.1,cy);ctx.lineTo(cx+gw*.1,cy);ctx.stroke();ctx.restore()}
+ if(activeFilter==='mask'){ctx.save();ctx.translate(w,0);ctx.scale(-1,1);ctx.strokeStyle='#b58aff';ctx.lineWidth=3;ctx.shadowColor='#8d64ff';ctx.shadowBlur=16;ctx.beginPath();ctx.ellipse(w*.5,h*.42,w*.17,h*.24,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if(activeFilter==='sparkle'){ctx.fillStyle='#fff3a6';for(let i=0;i<10;i++){const x=(w*(.1+i*.083)+Math.sin(now/600+i)*12)%w,y=h*(.15+((i*37)%70)/100);ctx.font='20px sans-serif';ctx.fillText('✦',x,y)}}
+}
+startBtn.addEventListener('click',startCamera);stopBtn.addEventListener('click',stopCamera);
+snapBtn.addEventListener('click',()=>{if(!stream)return;const out=document.createElement('canvas');out.width=video.videoWidth;out.height=video.videoHeight;const o=out.getContext('2d');o.translate(out.width,0);o.scale(-1,1);o.filter=video.style.filter||'none';o.drawImage(video,0,0,out.width,out.height);o.filter='none';const a=document.createElement('a');a.download='face-motion-snapshot.png';a.href=out.toDataURL('image/png');a.click();toast('Snapshot saved. Note: overlay effects are not included in this basic snapshot.')});
+document.getElementById('faceUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;if(referenceUrl)URL.revokeObjectURL(referenceUrl);referenceUrl=URL.createObjectURL(f);const p=document.getElementById('facePreview');p.src=referenceUrl;p.style.display='block';document.getElementById('clearUpload').disabled=false;toast('Reference image loaded. Face swapping is not active in this demo.')});
+document.getElementById('clearUpload').addEventListener('click',()=>{if(referenceUrl)URL.revokeObjectURL(referenceUrl);referenceUrl=null;document.getElementById('faceUpload').value='';document.getElementById('facePreview').style.display='none';document.getElementById('clearUpload').disabled=true});
+window.addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+resizeCanvas();
+</script>
+</body></html>
